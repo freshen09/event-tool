@@ -4,7 +4,46 @@
   <title>Event Tool</title>
 </head>
 <body style="font-family: Arial; padding: 40px;">
-  <h1>Event Tool läuft 🚀</h1>
-  <p>Dein System ist online.</p>
+
+  <h1>Event Tool</h1>
+
+  <input id="name" placeholder="Event Name">
+  <input id="date" placeholder="Datum">
+  <button onclick="addEvent()">Event speichern</button>
+
+  <h2>Events</h2>
+  <ul id="list"></ul>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+  <script>
+    const supabase = supabase.createClient(
+      "https://rilddglkojpxurdfsgxh.supabase.co/rest/v1/",
+      "sb_publishable_myqmQW6Q97I7REKedkufHA_AKfXAS1p"
+    );
+
+    async function addEvent() {
+      const name = document.getElementById("name").value;
+      const date = document.getElementById("date").value;
+
+      await supabase.from("events").insert([{ name, date }]);
+      loadEvents();
+    }
+
+    async function loadEvents() {
+      const { data } = await supabase.from("events").select("*");
+
+      const list = document.getElementById("list");
+      list.innerHTML = "";
+
+      data.forEach(e => {
+        const li = document.createElement("li");
+        li.innerText = e.name + " - " + e.date;
+        list.appendChild(li);
+      });
+    }
+
+    loadEvents();
+  </script>
+
 </body>
 </html>
