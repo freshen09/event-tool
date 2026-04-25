@@ -1,49 +1,99 @@
-<!DOCTYPE html>
-<html>
-<head>
-  <title>Event Tool</title>
-</head>
 <body style="font-family: Arial; padding: 40px;">
 
-  <h1>Event Tool</h1>
+<h1>Event Tool</h1>
 
-  <input id="name" placeholder="Event Name">
-  <input id="date" placeholder="Datum">
-  <button onclick="addEvent()">Event speichern</button>
+<h2>Event erstellen</h2>
+<input id="name" placeholder="Event Name">
+<input id="date" placeholder="Datum">
+<button onclick="addEvent()">Speichern</button>
 
-  <h2>Events</h2>
-  <ul id="list"></ul>
+<h2>Events</h2>
+<ul id="events"></ul>
 
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
-  <script>
-    const supabase = supabase.createClient(
-      "https://rilddglkojpxurdfsgxh.supabase.co/rest/v1/",
+<hr>
+
+<h2>Timeline</h2>
+
+<select id="eventSelect"></select>
+
+<input id="label" placeholder="z.B. Soundcheck">
+<input id="time" placeholder="z.B. 14:00">
+<input id="note" placeholder="Notiz">
+
+<button onclick="addTimeline()">Hinzufügen</button>
+
+<ul id="timeline"></ul>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+<script>
+const supabase = supabase.createClient(
+  "https://rilddglkojpxurdfsgxh.supabase.co/rest/v1/",
       "sb_publishable_myqmQW6Q97I7REKedkufHA_AKfXAS1p"
-    );
+);
 
-    async function addEvent() {
-      const name = document.getElementById("name").value;
-      const date = document.getElementById("date").value;
+async function addEvent() {
+  const name = document.getElementById("name").value;
+  const date = document.getElementById("date").value;
 
-      await supabase.from("events").insert([{ name, date }]);
-      loadEvents();
-    }
+  await supabase.from("events").insert([{ name, date }]);
+  loadEvents();
+}
 
-    async function loadEvents() {
-      const { data } = await supabase.from("events").select("*");
+async function loadEvents() {
+  const { data } = await supabase.from("events").select("*");
 
-      const list = document.getElementById("list");
-      list.innerHTML = "";
+  const list = document.getElementById("events");
+  const select = document.getElementById("eventSelect");
 
-      data.forEach(e => {
-        const li = document.createElement("li");
-        li.innerText = e.name + " - " + e.date;
-        list.appendChild(li);
-      });
-    }
+  list.innerHTML = "";
+  select.innerHTML = "";
 
-    loadEvents();
-  </script>
+  data.forEach(e => {
+    const li = document.createElement("li");
+    li.innerText = e.name + " - " + e.date;
+    list.appendChild(li);
+
+    const option = document.createElement("option");
+    option.value = e.id;
+    option.text = e.name;
+    select.appendChild(option);
+  });
+}
+
+async function addTimeline() {
+  const event_id = document.getElementById("eventSelect").value;
+  const label = document.getElementById("label").value;
+  const time = document.getElementById("time").value;
+  const note = document.getElementById("note").value;
+
+  await supabase.from("timeline").insert([
+    { event_id, label, time, note }
+  ]);
+
+  loadTimeline();
+}
+
+async function loadTimeline() {
+  const event_id = document.getElementById("eventSelect").value;
+
+  const { data } = await supabase
+    .from("timeline")
+    .select("*")
+    .eq("event_id", event_id);
+
+  const list = document.getElementById("timeline");
+  list.innerHTML = "";
+
+  data.forEach(t => {
+    const li = document.createElement("li");
+    li.innerText = t.time + " - " + t.label + " (" + t.note + ")";
+    list.appendChild(li);
+  });
+}
+
+document.getElementById("eventSelect").onchange = loadTimeline;
+
+loadEvents();
+</script>
 
 </body>
-</html>
